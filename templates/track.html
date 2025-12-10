@@ -1,112 +1,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Track Your Order</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 40px;
-            background: #f5f5f5;
-        }
-        #container {
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 8px;
-            max-width: 650px;
-            margin: auto;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            color: #333;
-            margin-top: 0;
-        }
-        .row {
-            margin-bottom: 15px;
-        }
-        label {
-            font-size: 14px;
-            display: block;
-            margin-bottom: 5px;
-        }
-        select, input {
-            padding: 10px;
-            width: 100%;
-            border: 1px solid #888;
-            border-radius: 5px;
-            font-size: 15px;
-        }
-        button {
-            padding: 10px 20px;
-            margin-top: 10px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 15px;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 25px;
-        }
-        table, th, td {
-            border: 1px solid #444;
-        }
-        th, td {
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background: #333;
-            color: white;
-        }
-        a {
-            color: #007bff;
-            text-decoration: none;
-            font-weight: bold;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
-        #result {
-            margin-top: 20px;
-        }
-        .note {
-            font-size: 12px;
-            color: #777;
-            margin-top: 5px;
-        }
-    </style>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center">
 
-<div id="container">
-    <h2>Track Your Order</h2>
+<div class="w-full max-w-3xl mx-4">
+    <!-- Main Card -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-3 text-center">
+            Track Your Order
+        </h1>
+        <p class="text-sm text-slate-500 mb-6 text-center">
+            Use your <span class="font-semibold">phone number</span> or <span class="font-semibold">order ID</span> to see your shipment details.
+        </p>
 
-    <div class="row">
-        <label for="searchType">Search by:</label>
-        <select id="searchType" onchange="updatePlaceholder()">
-            <option value="phone">Phone Number</option>
-            <option value="order_id">Order ID</option>
-        </select>
+        <!-- Search controls (fixed layout) -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-4">
+            <!-- Search by -->
+            <div class="sm:w-40">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">
+                    Search by
+                </label>
+                <select id="searchType"
+                        onchange="updatePlaceholder()"
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="phone">Phone Number</option>
+                    <option value="order_id">Order ID</option>
+                </select>
+            </div>
+
+            <!-- Value -->
+            <div class="flex-1">
+                <label id="searchLabel"
+                       class="block text-xs font-semibold text-slate-600 mb-1">
+                    Phone Number
+                </label>
+                <input id="searchValue"
+                       type="text"
+                       placeholder="Enter phone number"
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <p class="text-[11px] text-slate-500 mt-1">
+                    Phone number should be the same as the one used while placing the order.
+                </p>
+            </div>
+        </div>
+
+        <!-- Button -->
+        <button onclick="searchTracking()"
+                class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">
+            Track Order
+        </button>
+
+        <!-- Result area -->
+        <div id="result" class="mt-6 text-sm text-slate-700"></div>
     </div>
-
-    <div class="row">
-        <label id="searchLabel" for="searchValue">Phone Number</label>
-        <input type="text" id="searchValue" placeholder="Enter phone number">
-        <div class="note">Enter the phone number used while placing the order, or switch to Order ID.</div>
-    </div>
-
-    <button onclick="searchTracking()">Track Order</button>
-
-    <div id="result"></div>
 </div>
-
 
 <script>
     function updatePlaceholder() {
@@ -129,13 +81,13 @@
         const result = document.getElementById("result");
 
         if (!value) {
-            result.innerHTML = "<p>Please enter a value.</p>";
+            result.innerHTML = `<p class="text-red-500">Please enter a value.</p>`;
             return;
         }
 
-        result.innerHTML = "<p>Loading...</p>";
+        result.innerHTML = `<p class="text-slate-500">Searching...</p>`;
 
-        // Build correct query parameter
+        // Build URL
         let url = "/api/track?";
         if (type === "phone") {
             url += "phone=" + encodeURIComponent(value);
@@ -147,50 +99,89 @@
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
-                    result.innerHTML = "<p>" + data.error + "</p>";
+                    result.innerHTML = `<p class="text-red-500">${data.error}</p>`;
                     return;
                 }
 
                 if (!data.results || data.results.length === 0) {
-                    result.innerHTML = "<p>No orders found for given details.</p>";
+                    result.innerHTML = `<p class="text-slate-500">No orders found for given details.</p>`;
                     return;
                 }
 
+                // Build NICE CARDS instead of table
                 let html = `
-                    <table>
-                        <tr>
-                            <th>Name</th>
-                            <th>Order ID</th>
-                            <th>Phone</th>
-                            <th>Tracking Number</th>
-                            <th>Courier</th>
-                            <th>Track</th>
-                        </tr>
+                    <div class="mt-4 space-y-3">
+                        <h2 class="text-base font-semibold text-slate-800 mb-1">
+                            ${data.results.length} order(s) found
+                        </h2>
                 `;
 
                 data.results.forEach(row => {
                     const link = row.courier_site
-                        ? `<a href="${row.courier_site}" target="_blank">Track</a>`
-                        : "Unavailable";
+                        ? `<a href="${row.courier_site}" target="_blank"
+                               class="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700">
+                               Track Package
+                           </a>`
+                        : `<span class="text-xs text-slate-400">Tracking link unavailable</span>`;
+
+                    const courierName = row.courier_name || "Courier";
+
+                    // Simple status (you can change later)
+                    const status = "Dispatched";
 
                     html += `
-                        <tr>
-                            <td>${row.customer_name}</td>
-                            <td>${row.order_id}</td>
-                            <td>${row.phone}</td>
-                            <td>${row.tracking_number}</td>
-                            <td>${row.courier_name}</td>
-                            <td>${link}</td>
-                        </tr>
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5 flex flex-col gap-3">
+                            <div class="flex justify-between items-start gap-3">
+                                <div>
+                                    <p class="text-xs uppercase tracking-wide text-slate-500">Order</p>
+                                    <p class="font-semibold text-slate-800 text-sm sm:text-base">
+                                        ${row.order_id || "-"}
+                                    </p>
+                                    <p class="text-xs text-slate-500">
+                                        Customer: <span class="font-medium">${row.customer_name || "-"}</span>
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs uppercase tracking-wide text-slate-500">Status</p>
+                                    <p class="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[11px] font-semibold">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        ${status}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="grid sm:grid-cols-2 gap-3 text-xs sm:text-[13px] text-slate-600">
+                                <div>
+                                    <p><span class="font-semibold">Phone:</span> ${row.phone || "-"}</p>
+                                    <p><span class="font-semibold">Pincode:</span> ${row.pincode || "-"}</p>
+                                </div>
+                                <div>
+                                    <p><span class="font-semibold">Tracking No:</span> ${row.tracking_number || "-"}</p>
+                                    <p class="flex items-center gap-1">
+                                        <span class="font-semibold">Courier:</span>
+                                        <span class="inline-flex items-center gap-1">
+                                            <span class="text-lg">🚚</span> ${courierName}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-200 mt-2">
+                                <p class="text-[11px] text-slate-500">
+                                    Updated at: ${row.updated_at || "-"}
+                                </p>
+                                ${link}
+                            </div>
+                        </div>
                     `;
                 });
 
-                html += "</table>";
+                html += `</div>`;
                 result.innerHTML = html;
             })
             .catch(err => {
                 console.error(err);
-                result.innerHTML = "<p>Error fetching data. Try again.</p>";
+                result.innerHTML = `<p class="text-red-500">Error fetching data. Please try again.</p>`;
             });
     }
 </script>

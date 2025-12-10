@@ -1,3 +1,4 @@
+import os
 from flask import (
     Flask,
     render_template,
@@ -16,22 +17,25 @@ app = Flask(__name__)
 # -----------------------------------------
 # SECRET KEY (REQUIRED FOR LOGIN SESSIONS)
 # -----------------------------------------
-app.secret_key = "2507"
+# -----------------------------------------
+# SECRET KEY (REQUIRED FOR LOGIN SESSIONS)
+# -----------------------------------------
+app.secret_key = os.environ.get("SECRET_KEY", "change_this_local_secret")
 
 # -----------------------------------------
-# SIMPLE ADMIN CREDENTIALS
+# SIMPLE ADMIN CREDENTIALS (OVERRIDDEN BY ENV VARS IN PRODUCTION)
 # -----------------------------------------
-ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "admin1234"   # 
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
 
 # -----------------------------------------
 # DATABASE CONFIG
 # -----------------------------------------
 DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",          # change if needed
-    "password": "2507",      # your MySQL password
-    "database": "tracking_service_db"
+    "host": os.environ.get("DB_HOST", "localhost"),
+    "user": os.environ.get("DB_USER", "root"),
+    "password": os.environ.get("DB_PASSWORD", "2507"),
+    "database": os.environ.get("DB_NAME", "tracking_service_db")
 }
 
 

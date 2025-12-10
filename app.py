@@ -172,6 +172,36 @@ def track_by_phone():
 def track_page():
     return render_template("track.html")
 
+@app.route("/admin")
+def admin_dashboard():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # total orders
+        cursor.execute("SELECT COUNT(*) FROM shipments")
+        total_orders = cursor.fetchone()[0]
+
+        # orders count by courier
+        cursor.execute("""
+            SELECT courier_name, COUNT(*)
+            FROM shipments
+            GROUP BY courier_name
+        """)
+        courier_stats = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+
+        return render_template(
+            "admin.html",
+            total_orders=total_orders,
+            courier_stats=courier_stats,
+        )
+    except Exception as e:
+        return f"Error loading admin dashboard: {e}"
+
+
 
 
 # -----------------------------------------

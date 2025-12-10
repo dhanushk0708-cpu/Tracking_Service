@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            display: flex;
+            height: 100vh;
+            align-items: center;
+            justify-content: center;
+        }
+        #box {
+            background: #fff;
+            padding: 25px 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+            width: 350px;
+        }
+        h2 {
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        label {
+            font-size: 14px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 5px;
+            border: 1px solid #888;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background: #007bff;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .error {
+            color: red;
+            font-size: 13px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .hint {
+            font-size: 11px;
+            color: #777;
+            text-align: center;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="box">
+    <h2>Admin Login</h2>
+
+    {% if error %}
+        <div class="error">{{ error }}</div>
+    {% endif %}
+
+    <form method="post">
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <label>Username</label>
+        <input type="text" name="username" required>
+
+        <label>Password</label>
+        <input type="password" name="password" required>
+
+        <button type="submit">Login</button>
+
+        <div class="hint">
+            Demo: username <b>admin</b>, password <b>admin123</b><br>
+            (Change these in <code>app.py</code> for real use.)
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

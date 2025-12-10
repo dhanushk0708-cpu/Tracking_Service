@@ -1,8 +1,28 @@
-from flask import Flask, render_template, request, jsonify
+from flask import (
+    Flask,
+    render_template,
+    request,
+    jsonify,
+    redirect,
+    url_for,
+    session,
+)
 import mysql.connector
 import pandas as pd
+from functools import wraps
 
 app = Flask(__name__)
+
+# -----------------------------------------
+# SECRET KEY (REQUIRED FOR LOGIN SESSIONS)
+# -----------------------------------------
+app.secret_key = "2507"
+
+# -----------------------------------------
+# SIMPLE ADMIN CREDENTIALS
+# -----------------------------------------
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "admin1234"   # 
 
 # -----------------------------------------
 # DATABASE CONFIG
@@ -22,6 +42,19 @@ def get_db_connection():
 def norm(name: str) -> str:
     """Normalize Excel column names."""
     return str(name).strip().lower().replace(" ", "").replace(".", "")
+
+
+# -----------------------------------------
+# LOGIN REQUIRED DECORATOR
+# -----------------------------------------
+def login_required(f):
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        if not session.get("admin_logged_in"):
+            next_url = request.path
+            return redirect(url_for("admin_login", next=next_url))
+        return f(*args, **kwargs)
+    return wrapper
 
 
 # -----------------------------------------
@@ -46,9 +79,38 @@ def test_db():
 
 
 # -----------------------------------------
-# ADMIN: UPLOAD EXCEL
+# ADMIN LOGIN / LOGOUT
+# -----------------------------------------
+@app.route("/admin/login", methods=["GET", "POST"])
+def admin_login():
+    error = None
+    next_url = request.args.get("next") or url_for("admin_dashboard")
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
+        next_url = request.form.get("next") or url_for("admin_dashboard")
+
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session["admin_logged_in"] = True
+            return redirect(next_url)
+        else:
+            error = "Invalid username or password."
+
+    return render_template("login.html", error=error, next=next_url)
+
+
+@app.route("/admin/logout")
+def admin_logout():
+    session.clear()
+    return redirect(url_for("admin_login"))
+
+
+# -----------------------------------------
+# ADMIN: UPLOAD EXCEL (PROTECTED)
 # -----------------------------------------
 @app.route("/admin/upload", methods=["GET", "POST"])
+@login_required
 def upload_page():
     if request.method == "GET":
         return render_template("upload.html")
@@ -132,9 +194,6 @@ def upload_page():
 
 
 # -----------------------------------------
-# PUBLIC API: TRACK BY PHONE
-# -----------------------------------------
-# -----------------------------------------
 # PUBLIC API: TRACK BY PHONE OR ORDER ID
 # -----------------------------------------
 @app.route("/api/track", methods=["GET"])
@@ -142,7 +201,6 @@ def track_by_phone_or_order():
     phone = request.args.get("phone", "").strip()
     order_id = request.args.get("order_id", "").strip()
 
-    # At least one filter required
     if not phone and not order_id:
         return jsonify({"error": "Provide phone or order_id parameter"}), 400
 
@@ -150,7 +208,6 @@ def track_by_phone_or_order():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Build WHERE clause dynamically
         where_clauses = []
         params = []
 
@@ -185,14 +242,13 @@ def track_by_phone_or_order():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    
-@app.route("/track")
-def track_page():
-    return render_template("track.html")
 
+# -----------------------------------------
+# ADMIN DASHBOARD (PROTECTED)
+# -----------------------------------------
 @app.route("/admin")
+@login_required
 def admin_dashboard():
-    # Get date filter values from URL, e.g. /admin?start_date=2025-12-01&end_date=2025-12-10
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
 
@@ -200,11 +256,9 @@ def admin_dashboard():
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Overall total (without any filter)
         cursor.execute("SELECT COUNT(*) FROM shipments")
         overall_total = cursor.fetchone()[0]
 
-        # Build WHERE clause for date filter using updated_at
         where_clauses = []
         params = []
 
@@ -220,11 +274,9 @@ def admin_dashboard():
         if where_clauses:
             where_sql = " WHERE " + " AND ".join(where_clauses)
 
-        # Total orders in selected date range
         cursor.execute("SELECT COUNT(*) FROM shipments" + where_sql, params)
         total_orders = cursor.fetchone()[0]
 
-        # Orders by courier in selected date range
         courier_query = """
             SELECT courier_name, COUNT(*)
             FROM shipments
@@ -246,8 +298,13 @@ def admin_dashboard():
         )
     except Exception as e:
         return f"Error loading admin dashboard: {e}"
-    
+
+
+# -----------------------------------------
+# ADMIN ORDER HISTORY (PROTECTED)
+# -----------------------------------------
 @app.route("/admin/orders")
+@login_required
 def admin_orders():
     query = request.args.get("q", "").strip()
     start_date = request.args.get("start_date")
@@ -261,7 +318,6 @@ def admin_orders():
         where_clauses = []
         params = []
 
-        # Search filter
         if query:
             where_clauses.append("""
                 (
@@ -274,7 +330,6 @@ def admin_orders():
             wildcard = f"%{query}%"
             params.extend([wildcard, wildcard, wildcard, wildcard])
 
-        # Date filters
         if start_date:
             where_clauses.append("DATE(updated_at) >= %s")
             params.append(start_date)
@@ -283,7 +338,6 @@ def admin_orders():
             where_clauses.append("DATE(updated_at) <= %s")
             params.append(end_date)
 
-        # Courier filter
         if courier_filter:
             where_clauses.append("courier_name = %s")
             params.append(courier_filter)
@@ -302,7 +356,6 @@ def admin_orders():
         cursor.execute(query_sql, params)
         orders = cursor.fetchall()
 
-        # Load distinct couriers for dropdown (use dict keys!)
         cursor.execute("SELECT DISTINCT courier_name FROM shipments")
         courier_rows = cursor.fetchall()
         couriers = [row["courier_name"] for row in courier_rows if row["courier_name"]]
@@ -324,10 +377,12 @@ def admin_orders():
         return f"Error loading order history: {e}"
 
 
-
-
-
-
+# -----------------------------------------
+# PUBLIC TRACK PAGE (HTML)
+# -----------------------------------------
+@app.route("/track")
+def track_page():
+    return render_template("track.html")
 
 
 # -----------------------------------------

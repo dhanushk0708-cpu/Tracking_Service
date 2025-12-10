@@ -250,36 +250,80 @@ def admin_dashboard():
 @app.route("/admin/orders")
 def admin_orders():
     query = request.args.get("q", "").strip()
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+    courier_filter = request.args.get("courier", "").strip()
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        if query:
-            search_sql = """
-                SELECT *
-                FROM shipments
-                WHERE customer_name LIKE %s
-                   OR phone LIKE %s
-                   OR order_id LIKE %s
-                   OR courier_name LIKE %s
-                ORDER BY updated_at DESC
-            """
-            wildcard = f"%{query}%"
-            cursor.execute(search_sql, (wildcard, wildcard, wildcard, wildcard))
-        else:
-            cursor.execute(
-                "SELECT * FROM shipments ORDER BY updated_at DESC LIMIT 500"
-            )
+        where_clauses = []
+        params = []
 
+        # Search filter
+        if query:
+            where_clauses.append("""
+                (
+                    customer_name LIKE %s OR 
+                    phone LIKE %s OR 
+                    order_id LIKE %s OR 
+                    courier_name LIKE %s
+                )
+            """)
+            wildcard = f"%{query}%"
+            params.extend([wildcard, wildcard, wildcard, wildcard])
+
+        # Date filters
+        if start_date:
+            where_clauses.append("DATE(updated_at) >= %s")
+            params.append(start_date)
+
+        if end_date:
+            where_clauses.append("DATE(updated_at) <= %s")
+            params.append(end_date)
+
+        # Courier filter
+        if courier_filter:
+            where_clauses.append("courier_name = %s")
+            params.append(courier_filter)
+
+        where_sql = ""
+        if where_clauses:
+            where_sql = " WHERE " + " AND ".join(where_clauses)
+
+        query_sql = f"""
+            SELECT *
+            FROM shipments
+            {where_sql}
+            ORDER BY updated_at DESC
+        """
+
+        cursor.execute(query_sql, params)
         orders = cursor.fetchall()
+
+        # Load distinct couriers for dropdown (use dict keys!)
+        cursor.execute("SELECT DISTINCT courier_name FROM shipments")
+        courier_rows = cursor.fetchall()
+        couriers = [row["courier_name"] for row in courier_rows if row["courier_name"]]
+
         cursor.close()
         conn.close()
 
-        return render_template("admin_orders.html", orders=orders, query=query)
+        return render_template(
+            "admin_orders.html",
+            orders=orders,
+            query=query,
+            start_date=start_date,
+            end_date=end_date,
+            couriers=couriers,
+            courier_filter=courier_filter
+        )
 
     except Exception as e:
         return f"Error loading order history: {e}"
+
+
 
 
 

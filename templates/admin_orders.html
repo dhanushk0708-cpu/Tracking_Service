@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>All Orders - Admin</title>
+    <title>Order History - Admin</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -17,80 +17,132 @@
             border-radius: 10px;
             box-shadow: 0 0 12px rgba(0,0,0,0.1);
         }
-        h1 {
-            margin-top: 0;
-        }
-        .search-box {
+        h1 { margin-top: 0; }
+
+        .filter-section {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
             margin-bottom: 20px;
         }
-        input {
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input[type="text"], input[type="date"], select {
             padding: 8px;
-            width: 300px;
+            font-size: 14px;
             border-radius: 5px;
             border: 1px solid #888;
         }
+
         button {
             padding: 8px 14px;
-            margin-left: 10px;
             background: #007bff;
             border: none;
             border-radius: 5px;
-            color: #fff;
+            color: white;
             cursor: pointer;
+            font-size: 14px;
         }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .clear-btn {
+            background: #777;
+        }
+
+        .clear-btn:hover {
+            background: #444;
+        }
+
         table {
             width: 100%;
-            border-collapse: collapse;
             margin-top: 15px;
+            border-collapse: collapse;
         }
-        table, th, td {
+
+        th, td {
             border: 1px solid #ccc;
+            padding: 10px;
         }
+
         th {
             background: #333;
             color: #fff;
-            padding: 10px;
         }
-        td {
-            padding: 10px;
-        }
-        a {
-            color: #007bff;
-            font-weight: bold;
-            text-decoration: none;
-        }
-        a:hover {
-            text-decoration: underline;
-        }
+
         .back-btn {
             margin-top: 20px;
             display: inline-block;
             background: #444;
-            padding: 8px 12px;
             color: white;
-            border-radius: 5px;
+            padding: 8px 12px;
             text-decoration: none;
+            border-radius: 5px;
         }
-        .back-btn:hover {
-            background: #222;
+
+        .back-btn:hover { background: #222; }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
         }
+
+        a:hover { text-decoration: underline; }
     </style>
 </head>
 <body>
 
 <div id="box">
-
     <h1>Order History</h1>
 
-    <!-- Search Bar -->
-    <form method="get">
-        <div class="search-box">
-            <input type="text" name="q" placeholder="Search name / phone / order id / courier"
-                   value="{{ query or '' }}">
-            <button type="submit">Search</button>
-        </div>
-    </form>
+    <!-- FILTERS -->
+    <div class="filter-section">
+        <form method="get">
+            <div class="filter-row">
+                <input type="text" name="q" placeholder="Search name/phone/order id"
+                       value="{{ query or '' }}">
 
+                <div>
+                    <label>Start Date:</label><br>
+                    <input type="date" name="start_date" value="{{ start_date or '' }}">
+                </div>
+
+                <div>
+                    <label>End Date:</label><br>
+                    <input type="date" name="end_date" value="{{ end_date or '' }}">
+                </div>
+
+                <div>
+                    <label>Courier:</label><br>
+                    <select name="courier">
+                        <option value="">All Couriers</option>
+                        {% for c in couriers %}
+                            <option value="{{ c }}" {% if courier_filter == c %}selected{% endif %}>
+                                {{ c }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit">Apply Filter</button>
+                <a href="/admin/orders">
+                    <button type="button" class="clear-btn">Clear</button>
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- TABLE -->
     {% if orders %}
     <table>
         <tr>
@@ -100,7 +152,7 @@
             <th>Pincode</th>
             <th>Tracking No</th>
             <th>Courier</th>
-            <th>Track Link</th>
+            <th>Track</th>
             <th>Date</th>
         </tr>
 
@@ -114,22 +166,18 @@
             <td>{{ row.courier_name }}</td>
             <td>
                 {% if row.courier_site %}
-                <a href="{{ row.courier_site }}" target="_blank">Track</a>
-                {% else %}
-                -
-                {% endif %}
+                    <a href="{{ row.courier_site }}" target="_blank">Track</a>
+                {% else %} - {% endif %}
             </td>
             <td>{{ row.updated_at }}</td>
         </tr>
         {% endfor %}
     </table>
-
     {% else %}
         <p>No orders found.</p>
     {% endif %}
 
     <a href="/admin" class="back-btn">← Back to Dashboard</a>
-
 </div>
 
 </body>

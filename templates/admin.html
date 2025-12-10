@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Shipments</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 40px;
+        }
+        #box {
+            max-width: 700px;
+            margin: auto;
+            background: #ffffff;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            margin-top: 0;
+        }
+        .stat {
+            background: #fafafa;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid #007bff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+        th {
+            background: #333;
+            color: #fff;
+        }
+        a.button {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 10px 16px;
+            background: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a.button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div id="box">
+    <h1>Admin Dashboard</h1>
+
+    <div class="stat">
+        <strong>Total Orders:</strong> {{ total_orders }}
+    </div>
+
+    <h3>Orders by Courier</h3>
+    {% if courier_stats %}
+        <table>
+            <tr>
+                <th>Courier Name</th>
+                <th>Number of Orders</th>
+            </tr>
+            {% for name, count in courier_stats %}
+            <tr>
+                <td>{{ name or 'Unknown' }}</td>
+                <td>{{ count }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p>No orders in database yet.</p>
+    {% endif %}
+
+    <h3>Quick Actions</h3>
+    <a href="/admin/upload" class="button">Upload New Excel</a>
+    <a href="/track" class="button">Open Track Page</a>
+</div>
+
+</body>
+</html>

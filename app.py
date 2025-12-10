@@ -20,13 +20,13 @@ app = Flask(__name__)
 # -----------------------------------------
 # SECRET KEY (REQUIRED FOR LOGIN SESSIONS)
 # -----------------------------------------
-app.secret_key = os.environ.get("SECRET_KEY", "change_this_local_secret")
+app.secret_key = os.environ.get("SECRET_KEY", "2507")
 
 # -----------------------------------------
 # SIMPLE ADMIN CREDENTIALS (OVERRIDDEN BY ENV VARS IN PRODUCTION)
 # -----------------------------------------
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin1234")
 
 # -----------------------------------------
 # DATABASE CONFIG

@@ -134,39 +134,57 @@ def upload_page():
 # -----------------------------------------
 # PUBLIC API: TRACK BY PHONE
 # -----------------------------------------
+# -----------------------------------------
+# PUBLIC API: TRACK BY PHONE OR ORDER ID
+# -----------------------------------------
 @app.route("/api/track", methods=["GET"])
-def track_by_phone():
+def track_by_phone_or_order():
     phone = request.args.get("phone", "").strip()
+    order_id = request.args.get("order_id", "").strip()
 
-    if not phone:
-        return jsonify({"error": "phone parameter is required"}), 400
+    # At least one filter required
+    if not phone and not order_id:
+        return jsonify({"error": "Provide phone or order_id parameter"}), 400
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        cursor.execute(
-            """
+        # Build WHERE clause dynamically
+        where_clauses = []
+        params = []
+
+        if phone:
+            where_clauses.append("phone = %s")
+            params.append(phone)
+
+        if order_id:
+            where_clauses.append("order_id = %s")
+            params.append(order_id)
+
+        where_sql = " AND ".join(where_clauses)
+
+        query = f"""
             SELECT customer_name, order_id, phone, pincode,
                    tracking_number, weight, courier_name, courier_site, updated_at
             FROM shipments
-            WHERE phone = %s
+            WHERE {where_sql}
             ORDER BY updated_at DESC
-            """,
-            (phone,),
-        )
+        """
 
+        cursor.execute(query, params)
         rows = cursor.fetchall()
         cursor.close()
         conn.close()
 
         if not rows:
-            return jsonify({"results": [], "message": "No orders found for this phone number."})
+            return jsonify({"results": [], "message": "No orders found for given details."})
 
         return jsonify({"results": rows})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
     
 @app.route("/track")
 def track_page():
@@ -174,20 +192,45 @@ def track_page():
 
 @app.route("/admin")
 def admin_dashboard():
+    # Get date filter values from URL, e.g. /admin?start_date=2025-12-01&end_date=2025-12-10
+    start_date = request.args.get("start_date")
+    end_date = request.args.get("end_date")
+
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # total orders
+        # Overall total (without any filter)
         cursor.execute("SELECT COUNT(*) FROM shipments")
+        overall_total = cursor.fetchone()[0]
+
+        # Build WHERE clause for date filter using updated_at
+        where_clauses = []
+        params = []
+
+        if start_date:
+            where_clauses.append("DATE(updated_at) >= %s")
+            params.append(start_date)
+
+        if end_date:
+            where_clauses.append("DATE(updated_at) <= %s")
+            params.append(end_date)
+
+        where_sql = ""
+        if where_clauses:
+            where_sql = " WHERE " + " AND ".join(where_clauses)
+
+        # Total orders in selected date range
+        cursor.execute("SELECT COUNT(*) FROM shipments" + where_sql, params)
         total_orders = cursor.fetchone()[0]
 
-        # orders count by courier
-        cursor.execute("""
+        # Orders by courier in selected date range
+        courier_query = """
             SELECT courier_name, COUNT(*)
             FROM shipments
-            GROUP BY courier_name
-        """)
+        """ + where_sql + " GROUP BY courier_name"
+
+        cursor.execute(courier_query, params)
         courier_stats = cursor.fetchall()
 
         cursor.close()
@@ -195,11 +238,50 @@ def admin_dashboard():
 
         return render_template(
             "admin.html",
+            overall_total=overall_total,
             total_orders=total_orders,
             courier_stats=courier_stats,
+            start_date=start_date,
+            end_date=end_date,
         )
     except Exception as e:
         return f"Error loading admin dashboard: {e}"
+    
+@app.route("/admin/orders")
+def admin_orders():
+    query = request.args.get("q", "").strip()
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        if query:
+            search_sql = """
+                SELECT *
+                FROM shipments
+                WHERE customer_name LIKE %s
+                   OR phone LIKE %s
+                   OR order_id LIKE %s
+                   OR courier_name LIKE %s
+                ORDER BY updated_at DESC
+            """
+            wildcard = f"%{query}%"
+            cursor.execute(search_sql, (wildcard, wildcard, wildcard, wildcard))
+        else:
+            cursor.execute(
+                "SELECT * FROM shipments ORDER BY updated_at DESC LIMIT 500"
+            )
+
+        orders = cursor.fetchall()
+        cursor.close()
+        conn.close()
+
+        return render_template("admin_orders.html", orders=orders, query=query)
+
+    except Exception as e:
+        return f"Error loading order history: {e}"
+
+
 
 
 

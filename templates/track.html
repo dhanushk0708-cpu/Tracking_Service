@@ -9,23 +9,32 @@
             margin: 40px;
             background: #f5f5f5;
         }
-        h2 {
-            color: #333;
-        }
         #container {
             background: #ffffff;
             padding: 25px;
             border-radius: 8px;
-            max-width: 600px;
+            max-width: 650px;
             margin: auto;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
-        input {
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .row {
+            margin-bottom: 15px;
+        }
+        label {
+            font-size: 14px;
+            display: block;
+            margin-bottom: 5px;
+        }
+        select, input {
             padding: 10px;
-            width: 90%;
+            width: 100%;
             border: 1px solid #888;
             border-radius: 5px;
-            font-size: 16px;
+            font-size: 15px;
         }
         button {
             padding: 10px 20px;
@@ -35,7 +44,7 @@
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 16px;
+            font-size: 15px;
         }
         button:hover {
             background: #0056b3;
@@ -49,7 +58,7 @@
             border: 1px solid #444;
         }
         th, td {
-            padding: 12px;
+            padding: 10px;
             text-align: left;
         }
         th {
@@ -67,16 +76,32 @@
         #result {
             margin-top: 20px;
         }
+        .note {
+            font-size: 12px;
+            color: #777;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
 
 <div id="container">
     <h2>Track Your Order</h2>
-    
-    <label>Enter your phone number:</label><br><br>
-    <input type="text" id="phone" placeholder="Enter phone number" />
-    <br><br>
+
+    <div class="row">
+        <label for="searchType">Search by:</label>
+        <select id="searchType" onchange="updatePlaceholder()">
+            <option value="phone">Phone Number</option>
+            <option value="order_id">Order ID</option>
+        </select>
+    </div>
+
+    <div class="row">
+        <label id="searchLabel" for="searchValue">Phone Number</label>
+        <input type="text" id="searchValue" placeholder="Enter phone number">
+        <div class="note">Enter the phone number used while placing the order, or switch to Order ID.</div>
+    </div>
+
     <button onclick="searchTracking()">Track Order</button>
 
     <div id="result"></div>
@@ -84,19 +109,41 @@
 
 
 <script>
+    function updatePlaceholder() {
+        const type = document.getElementById("searchType").value;
+        const label = document.getElementById("searchLabel");
+        const input = document.getElementById("searchValue");
+
+        if (type === "phone") {
+            label.textContent = "Phone Number";
+            input.placeholder = "Enter phone number";
+        } else {
+            label.textContent = "Order ID";
+            input.placeholder = "Enter order ID";
+        }
+    }
+
     function searchTracking() {
-        const phone = document.getElementById("phone").value.trim();
+        const type = document.getElementById("searchType").value;
+        const value = document.getElementById("searchValue").value.trim();
         const result = document.getElementById("result");
 
-        if (!phone) {
-            result.innerHTML = "<p>Please enter your phone number.</p>";
+        if (!value) {
+            result.innerHTML = "<p>Please enter a value.</p>";
             return;
         }
 
         result.innerHTML = "<p>Loading...</p>";
 
-        // API call
-        fetch("http://127.0.0.1:5000/api/track?phone=" + phone)
+        // Build correct query parameter
+        let url = "/api/track?";
+        if (type === "phone") {
+            url += "phone=" + encodeURIComponent(value);
+        } else {
+            url += "order_id=" + encodeURIComponent(value);
+        }
+
+        fetch(url)
             .then(res => res.json())
             .then(data => {
                 if (data.error) {
@@ -105,7 +152,7 @@
                 }
 
                 if (!data.results || data.results.length === 0) {
-                    result.innerHTML = "<p>No orders found for this number.</p>";
+                    result.innerHTML = "<p>No orders found for given details.</p>";
                     return;
                 }
 
@@ -114,6 +161,7 @@
                         <tr>
                             <th>Name</th>
                             <th>Order ID</th>
+                            <th>Phone</th>
                             <th>Tracking Number</th>
                             <th>Courier</th>
                             <th>Track</th>
@@ -121,7 +169,7 @@
                 `;
 
                 data.results.forEach(row => {
-                    const link = row.courier_site 
+                    const link = row.courier_site
                         ? `<a href="${row.courier_site}" target="_blank">Track</a>`
                         : "Unavailable";
 
@@ -129,6 +177,7 @@
                         <tr>
                             <td>${row.customer_name}</td>
                             <td>${row.order_id}</td>
+                            <td>${row.phone}</td>
                             <td>${row.tracking_number}</td>
                             <td>${row.courier_name}</td>
                             <td>${link}</td>

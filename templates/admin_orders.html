@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order History - Admin</title>
+    <style>
+        /* (same style as before; kept brief for clarity) */
+        body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 40px; }
+        #box { max-width: 1100px; margin: auto; background: #fff; padding: 25px 30px; border-radius: 10px; box-shadow: 0 0 12px rgba(0,0,0,0.1); }
+        h1 { margin-top: 0; }
+
+        .filter-section { background: #fafafa; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 16px; }
+        .filter-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+        input[type="text"], input[type="date"], select { padding: 8px; font-size: 14px; border-radius: 5px; border: 1px solid #888; }
+        button { padding: 8px 14px; background: #007bff; border: none; border-radius: 5px; color: white; cursor: pointer; font-size: 14px; }
+        .clear-btn { background: #777; } .clear-btn:hover { background: #444; }
+
+        .actions-row { display:flex; gap:10px; align-items:center; margin-bottom:10px; }
+        .small { font-size:13px; color:#555; }
+
+        table { width: 100%; margin-top: 8px; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 10px; vertical-align: middle; text-align: left; }
+        th { background: #333; color: #fff; font-weight: 600; }
+        tr:nth-child(even) td { background: #fbfbfb; }
+
+        .back-btn { margin-top: 20px; display: inline-block; background: #444; color: white; padding: 8px 12px; text-decoration: none; border-radius: 5px; }
+        .back-btn:hover { background: #222; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .btn-danger { background:#c62828; color:#fff; padding:8px 12px; border-radius:5px; }
+        .btn-warning { background:#ff9800; color:#fff; padding:8px 12px; border-radius:5px; }
+
+        .checkbox { width:18px; height:18px; }
+        .right { text-align:right; }
+
+        @media (max-width: 900px) {
+          .filter-row { flex-direction: column; align-items: stretch; }
+          th, td { font-size: 13px; padding: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="box">
+    <h1>Order History</h1>
+
+    <!-- FILTERS -->
+    <div class="filter-section">
+        <form method="get" action="/admin/orders">
+            <div class="filter-row">
+                <input type="text" name="q" placeholder="Search name/phone/order id" value="{{ query or '' }}" style="flex:1; min-width:180px;">
+
+                <div>
+                    <label>Start Date:</label><br>
+                    <input type="date" name="start_date" value="{{ start_date or '' }}">
+                </div>
+
+                <div>
+                    <label>End Date:</label><br>
+                    <input type="date" name="end_date" value="{{ end_date or '' }}">
+                </div>
+
+                <div>
+                    <label>Courier:</label><br>
+                    <select name="courier">
+                        <option value="">All Couriers</option>
+                        {% for c in couriers %}
+                            <option value="{{ c }}" {% if courier_filter == c %}selected{% endif %}>{{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <button type="submit">Apply Filter</button>
+                  <a href="/admin/orders"><button type="button" class="clear-btn">Clear</button></a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- ACTIONS (bulk) -->
+    <div class="actions-row">
+        <form id="bulkForm" method="post" action="/admin/orders/bulk_edit" style="display:inline;">
+            <!-- we will dynamically add inputs before submit via JS -->
+            <button type="button" onclick="doBulkEdit()" class="btn-warning" title="Edit selected rows">Bulk Edit</button>
+            <button type="button" onclick="doBulkDelete()" class="btn-danger" title="Delete selected rows" style="margin-left:6px">Bulk Delete</button>
+        </form>
+
+        <div class="small" style="margin-left:10px">
+            <label><input id="selectAll" type="checkbox" class="checkbox"> Select all on page</label>
+        </div>
+
+        <div style="margin-left:auto" class="small">Showing <strong>{{ orders|length }}</strong> order(s)</div>
+    </div>
+
+    <!-- TABLE -->
+    {% if orders %}
+    <form id="ordersTableForm">
+    <table>
+        <thead>
+        <tr>
+            <th style="width:42px"></th>
+            <th>Name</th>
+            <th>Order ID</th>
+            <th>Phone</th>
+            <th>Pincode</th>
+            <th>Tracking No</th>
+            <th>Courier</th>
+            <th>Track</th>
+            <th>Date</th>
+            <th style="width:80px">Actions</th>
+        </tr>
+        </thead>
+
+        <tbody>
+        {% for row in orders %}
+        <tr>
+            <td class="right">
+                <input type="checkbox" class="row-checkbox checkbox" data-id="{{ row.id }}">
+            </td>
+            <td>{{ row.customer_name }}</td>
+            <td>{{ row.order_id or '–' }}</td>
+            <td>{{ row.phone }}</td>
+            <td>{{ row.pincode }}</td>
+            <td>{{ row.tracking_number }}</td>
+            <td>{{ row.courier_name }}</td>
+            <td>
+                {% if row.courier_site %}
+                    <a href="{{ row.courier_site }}" target="_blank">Track</a>
+                {% else %} - {% endif %}
+            </td>
+            <td>{{ row.updated_at }}</td>
+            <td>
+                <!-- Correct edit link pointing to route -->
+                <a href="/admin/order/{{ row.id }}/edit">Edit</a> |
+                <a href="#" onclick="singleDelete({{ row.id }}); return false;" style="color:#c62828">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    </form>
+    {% else %}
+        <p>No orders found.</p>
+    {% endif %}
+
+    <a href="/admin" class="back-btn">← Back to Dashboard</a>
+</div>
+
+<script>
+  // select all checkboxes on page
+  document.getElementById('selectAll').addEventListener('change', function() {
+    const checked = this.checked;
+    document.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = checked);
+  });
+
+  function collectSelectedIds() {
+    const ids = [];
+    document.querySelectorAll('.row-checkbox:checked').forEach(cb => {
+      const id = cb.getAttribute('data-id');
+      if (id) ids.push(id);
+    });
+    return ids;
+  }
+
+  function doBulkEdit() {
+  const ids = collectSelectedIds();
+  if (ids.length === 0) {
+    alert('Please select at least one order to edit.');
+    return;
+  }
+
+  // Redirect to bulk-edit page with selected ids in query string
+  const url = "/admin/bulk-edit?ids=" + encodeURIComponent(ids.join(","));
+  window.location.href = url;
+}
+
+
+  function doBulkDelete() {
+    const ids = collectSelectedIds();
+    if (ids.length === 0) {
+      alert('Please select at least one order to delete.');
+      return;
+    }
+    if (!confirm('Permanently delete ' + ids.length + ' order(s)? This cannot be undone.')) return;
+
+    // create a form and submit with action=delete
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/orders/bulk_edit';
+    ids.forEach(id => {
+      const inputIds = document.createElement('input');
+      inputIds.type = 'hidden'; inputIds.name = 'selected_ids'; inputIds.value = id;
+      form.appendChild(inputIds);
+    });
+    const inputAction = document.createElement('input');
+    inputAction.type = 'hidden'; inputAction.name = 'action'; inputAction.value = 'delete';
+    form.appendChild(inputAction);
+    document.body.appendChild(form);
+    form.submit();
+  }
+
+  function singleDelete(id) {
+    if (!confirm('Delete order id ' + id + '?')) return;
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/admin/orders/bulk_edit';
+    const inputIds = document.createElement('input');
+    inputIds.type = 'hidden'; inputIds.name = 'selected_ids'; inputIds.value = String(id);
+    form.appendChild(inputIds);
+    const inputAction = document.createElement('input');
+    inputAction.type = 'hidden'; inputAction.name = 'action'; inputAction.value = 'delete';
+    form.appendChild(inputAction);
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>
+
+</body>
+</html>

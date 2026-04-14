@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Edit Order #{{ order.id }}</title>
+  <style>
+    body{ font-family: Arial, sans-serif; padding:20px; background:#f7f7f7 }
+    form{ background:#fff; padding:20px; max-width:700px; border-radius:8px; margin:auto }
+    label{ display:block; margin-top:10px; font-weight:600 }
+    input[type=text], input[type=datetime-local] { width:100%; padding:8px; margin-top:6px }
+    button{ margin-top:12px; padding:8px 12px; background:#007bff; color:#fff; border:none; border-radius:5px }
+  </style>
+</head>
+<body>
+  <h1>Edit Order #{{ order.id }}</h1>
+
+  <form method="post">
+    <label>Customer name</label>
+    <input type="text" name="customer_name" value="{{ order.customer_name or '' }}">
+
+    <label>Order ID</label>
+    <input type="text" name="order_id_field" value="{{ order.order_id or '' }}">
+
+    <label>Phone</label>
+    <input type="text" name="phone" value="{{ order.phone or '' }}">
+
+    <label>Pincode</label>
+    <input type="text" name="pincode" value="{{ order.pincode or '' }}">
+
+    <label>Tracking number</label>
+    <input type="text" name="tracking_number" value="{{ order.tracking_number or '' }}">
+
+    <label>Courier name</label>
+    <input type="text" name="courier_name" value="{{ order.courier_name or '' }}">
+
+    <label>Courier site (optional)</label>
+    <input type="text"  name="courier_site" value="{{ order.courier_site or '' }}">
+
+    <label>Updated at (optional — format: YYYY-MM-DD HH:MM:SS)</label>
+    <input type="text" name="updated_at" value="{{ order.updated_at or '' }}" placeholder="YYYY-MM-DD HH:MM:SS">
+
+    <button type="submit">Save changes</button>
+    <a href="{{ url_for('admin_orders') }}" style="margin-left:10px;">Cancel</a>
+  </form>
+
+  <p style="text-align:center;margin-top:12px"><a href="{{ url_for('admin_orders') }}">Back to Orders</a></p>
+</body>
+</html>

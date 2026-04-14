@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Address Tool</title>
+</head>
+<body>
+
+<h2>📦 WhatsApp Address Tool</h2>
+
+<form method="post">
+    <textarea
+        name="raw_text"
+        rows="18"
+        style="width:100%;font-size:14px"
+        placeholder="Paste WhatsApp Web messages here..."
+        required></textarea>
+
+    <br><br>
+
+    <button type="submit" name="action" value="preview">
+        Preview
+    </button>
+
+    <button type="submit" name="action" value="generate">
+        Generate Word
+    </button>
+</form>
+
+{% if preview %}
+<hr>
+<h3>Preview</h3>
+
+{% for addr in preview %}
+<pre style="border:1px solid #000;padding:10px;margin-bottom:12px;white-space:pre-wrap;">
+{{ addr }}
+</pre>
+{% endfor %}
+
+{% endif %}
+
+</body>
+</html>

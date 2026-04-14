@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bulk Edit - Upload CSV/Excel</title>
+  <style>
+    body{
+        font-family:Arial, sans-serif;
+        padding:30px;
+        background:#f4f4f4;
+    }
+    .card{
+        background:#fff;
+        padding:20px;
+        max-width:700px;
+        margin:auto;
+        border-radius:8px;
+        box-shadow:0 0 10px rgba(0,0,0,0.1);
+    }
+    label{
+        display:block;
+        margin-top:8px;
+        font-weight:600;
+    }
+    input[type=file]{
+        margin-top:10px;
+        padding:5px;
+    }
+    button{
+        margin-top:12px;
+        padding:10px 16px;
+        background:#007bff;
+        color:#fff;
+        border:none;
+        border-radius:5px;
+        cursor:pointer;
+        font-size:14px;
+    }
+    button:hover{
+        background:#0056b3;
+    }
+    ul{
+        margin-top:12px;
+        background:#fafafa;
+        padding:12px;
+        border-left:4px solid #007bff;
+        border-radius:4px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+
+    <!-- Selected IDs Display Block -->
+    {% if request.args.get('ids') %}
+      <div style="padding:10px;background:#eef;border-left:4px solid #36f;margin-bottom:12px;">
+        <strong>Selected IDs:</strong> {{ request.args.get('ids') }}
+      </div>
+    {% endif %}
+
+    <h2>Bulk Edit by CSV / Excel</h2>
+    <p style="font-size:14px;color:#444;">
+      Upload a CSV or Excel file to update existing rows.
+      Your file must contain either <strong>id</strong> (preferred)
+      or <strong>tracking_number</strong> to match database rows.
+    </p>
+
+    <!-- Upload form -->
+    <form method="post" action="/admin/bulk-edit" enctype="multipart/form-data">
+      <label>Select file (.csv / .xlsx):</label>
+      <input type="file" name="file" accept=".csv,.xlsx,.xls" required>
+
+      <button type="submit">Upload & Apply Changes</button>
+    </form>
+
+    <h3 style="margin-top:18px">Supported Columns</h3>
+    <ul>
+      <li>id</li>
+      <li>tracking_number / tracknumber</li>
+      <li>customer_name / name</li>
+      <li>orderid / order_id</li>
+      <li>phonenumber / phone</li>
+      <li>pincode</li>
+      <li>couriername / courier_name</li>
+      <li>updated_at (YYYY-MM-DD HH:MM:SS)</li>
+    </ul>
+
+</div>
+
+</body>
+</html>

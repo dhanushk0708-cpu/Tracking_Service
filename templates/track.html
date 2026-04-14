@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Track Your Order</title>
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex items-center justify-center">
+
+<div class="w-full max-w-3xl mx-4">
+    <!-- Main Card -->
+    <div class="bg-white rounded-2xl shadow-lg p-6 sm:p-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-slate-800 mb-3 text-center">
+            Track Your Order
+        </h1>
+        <p class="text-sm text-slate-500 mb-6 text-center">
+            Use your <span class="font-semibold">phone number</span> or <span class="font-semibold">order ID</span> to see your shipment details.
+        </p>
+
+        <!-- Search controls (fixed layout) -->
+        <div class="flex flex-col sm:flex-row gap-4 mb-4">
+            <!-- Search by -->
+            <div class="sm:w-40">
+                <label class="block text-xs font-semibold text-slate-600 mb-1">
+                    Search by
+                </label>
+                <select id="searchType"
+                        onchange="updatePlaceholder()"
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="phone">Phone Number</option>
+                    <option value="order_id">Order ID</option>
+                </select>
+            </div>
+
+            <!-- Value -->
+            <div class="flex-1">
+                <label id="searchLabel"
+                       class="block text-xs font-semibold text-slate-600 mb-1">
+                    Phone Number (eg-987654321)(Don't Use +91)
+                </label>
+                <input id="searchValue"
+                       type="text"
+                       placeholder="Enter phone number"
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                <p class="text-[11px] text-slate-500 mt-1">
+                    Phone number should be the same as the one used while placing the order.
+                </p>
+            </div>
+        </div>
+
+        <!-- Button -->
+        <button onclick="searchTracking()"
+                class="w-full sm:w-auto px-6 py-2.5 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition">
+            Track Order
+        </button>
+
+        <!-- Result area -->
+        <div id="result" class="mt-6 text-sm text-slate-700"></div>
+    </div>
+</div>
+
+<script>
+    function updatePlaceholder() {
+        const type = document.getElementById("searchType").value;
+        const label = document.getElementById("searchLabel");
+        const input = document.getElementById("searchValue");
+
+        if (type === "phone") {
+            label.textContent = "Phone Number";
+            input.placeholder = "Enter phone number";
+        } else {
+            label.textContent = "Order ID(example-SC1234IN)";
+            input.placeholder = "Enter order ID";
+        }
+    }
+
+    function searchTracking() {
+        const type = document.getElementById("searchType").value;
+        const value = document.getElementById("searchValue").value.trim();
+        const result = document.getElementById("result");
+
+        if (!value) {
+            result.innerHTML = `<p class="text-red-500">Please enter a value.</p>`;
+            return;
+        }
+
+        result.innerHTML = `<p class="text-slate-500">Searching...</p>`;
+
+        // Build URL
+        let url = "/api/track?";
+        if (type === "phone") {
+            url += "phone=" + encodeURIComponent(value);
+        } else {
+            url += "order_id=" + encodeURIComponent(value);
+        }
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data.error) {
+                    result.innerHTML = `<p class="text-red-500">${data.error}</p>`;
+                    return;
+                }
+
+                if (!data.results || data.results.length === 0) {
+                    result.innerHTML = `<p class="text-slate-500">Your order is being processed
+We are preparing your order.
+Tracking information will be available within 48 hours.
+Please check again later.Thank you for your patience.</p>`;
+                    return;
+                }
+
+                // Build NICE CARDS instead of table
+                let html = `
+                    <div class="mt-4 space-y-3">
+                        <h2 class="text-base font-semibold text-slate-800 mb-1">
+                            ${data.results.length} order(s) found
+                        </h2>
+                `;
+
+                data.results.forEach(row => {
+                    const link = row.courier_site
+                        ? `<a href="${row.courier_site}" target="_blank"
+                               class="inline-flex items-center px-3 py-1.5 rounded-full bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700">
+                               Track Package
+                           </a>`
+                        : `<span class="text-xs text-slate-400">Tracking link unavailable</span>`;
+
+                    const courierName = row.courier_name || "Courier";
+
+                    // Simple status (you can change later)
+                    const status = "Dispatched";
+
+                    html += `
+                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5 flex flex-col gap-3">
+                            <div class="flex justify-between items-start gap-3">
+                                <div>
+                                    <p class="text-xs uppercase tracking-wide text-slate-500">Order</p>
+                                    <p class="font-semibold text-slate-800 text-sm sm:text-base">
+                                        ${row.order_id || "-"}
+                                    </p>
+                                    <p class="text-xs text-slate-500">
+                                        Customer: <span class="font-medium">${row.customer_name || "-"}</span>
+                                    </p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-xs uppercase tracking-wide text-slate-500">Status</p>
+                                    <p class="inline-flex items-center gap-1 rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[11px] font-semibold">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                        ${status}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="grid sm:grid-cols-2 gap-3 text-xs sm:text-[13px] text-slate-600">
+                                <div>
+                                    <p><span class="font-semibold">Phone:</span> ${row.phone || "-"}</p>
+                                    <p><span class="font-semibold">Pincode:</span> ${row.pincode || "-"}</p>
+                                </div>
+                                <div>
+                                    <p><span class="font-semibold">Tracking No:</span> ${row.tracking_number || "-"}</p>
+                                    <p class="flex items-center gap-1">
+                                        <span class="font-semibold">Courier:</span>
+                                        <span class="inline-flex items-center gap-1">
+                                            <span class="text-lg">🚚</span> ${courierName}
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center pt-2 border-t border-slate-200 mt-2">
+                                <p class="text-[11px] text-slate-500">
+                                    Updated at: ${row.updated_at || "-"}
+                                </p>
+                                ${link}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+                result.innerHTML = html;
+            })
+            .catch(err => {
+                console.error(err);
+                result.innerHTML = `<p class="text-red-500">Error fetching data. Please try again.</p>`;
+            });
+    }
+</script>
+
+</body>
+</html>

@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+<<<<<<< HEAD
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+=======
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
     <title>Admin Login</title>
     <style>
         body {
@@ -12,15 +15,22 @@
             height: 100vh;
             align-items: center;
             justify-content: center;
+<<<<<<< HEAD
             padding: 15px;
+=======
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
         }
         #box {
             background: #fff;
             padding: 25px 30px;
             border-radius: 10px;
             box-shadow: 0 0 12px rgba(0,0,0,0.1);
+<<<<<<< HEAD
             width: 100%;
             max-width: 350px;
+=======
+            width: 350px;
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
         }
         h2 {
             margin-top: 0;
@@ -32,7 +42,11 @@
         }
         input[type="text"], input[type="password"] {
             width: 100%;
+<<<<<<< HEAD
             padding: 10px;
+=======
+            padding: 8px 10px;
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
             border-radius: 5px;
             border: 1px solid #888;
             margin-top: 5px;
@@ -75,6 +89,7 @@
         <div class="error">{{ error }}</div>
     {% endif %}
 
+<<<<<<< HEAD
     <form method="post" autocomplete="off">
         <input type="hidden" name="next" value="{{ next }}">
 
@@ -83,11 +98,26 @@
 
         <label>Password</label>
         <input type="password" name="password" required autocomplete="new-password">
+=======
+    <form method="post">
+        <input type="hidden" name="next" value="{{ next }}">
+
+        <label>Username</label>
+        <input type="text" name="username" required>
+
+        <label>Password</label>
+        <input type="password" name="password" required>
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
 
         <button type="submit">Login</button>
 
         <div class="hint">
+<<<<<<< HEAD
             Default credentials are set in <code>app.py</code>.
+=======
+            
+            (Change these in <code>app.py</code> for real use.)
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
         </div>
     </form>
 </div>

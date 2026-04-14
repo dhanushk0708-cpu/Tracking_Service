@@ -1,12 +1,20 @@
 blinker==1.9.0
 click==8.3.1
+<<<<<<< HEAD
+=======
+colorama==0.4.6
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
 et_xmlfile==2.0.0
 Flask==3.1.2
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.3
 mysql-connector-python==9.5.0
+<<<<<<< HEAD
 numpy==2.2.6
+=======
+numpy==2.3.5
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
 openpyxl==3.1.5
 pandas==2.3.3
 python-dateutil==2.9.0.post0
@@ -14,4 +22,7 @@ pytz==2025.2
 six==1.17.0
 tzdata==2025.2
 Werkzeug==3.1.4
+<<<<<<< HEAD
 xlrd==2.0.2
+=======
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad

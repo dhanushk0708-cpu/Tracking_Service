@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Order History - Admin</title>
     <style>
+<<<<<<< HEAD
         /* (same style as before; kept brief for clarity) */
         body { font-family: Arial, sans-serif; background: #f4f4f4; padding: 40px; }
         #box { max-width: 1100px; margin: auto; background: #fff; padding: 25px 30px; border-radius: 10px; box-shadow: 0 0 12px rgba(0,0,0,0.1); }
@@ -38,6 +39,102 @@
           .filter-row { flex-direction: column; align-items: stretch; }
           th, td { font-size: 13px; padding: 8px; }
         }
+=======
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f4f4;
+            padding: 40px;
+        }
+        #box {
+            max-width: 1000px;
+            margin: auto;
+            background: #fff;
+            padding: 25px 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.1);
+        }
+        h1 { margin-top: 0; }
+
+        .filter-section {
+            background: #fafafa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input[type="text"], input[type="date"], select {
+            padding: 8px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #888;
+        }
+
+        button {
+            padding: 8px 14px;
+            background: #007bff;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        .clear-btn {
+            background: #777;
+        }
+
+        .clear-btn:hover {
+            background: #444;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 15px;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        th {
+            background: #333;
+            color: #fff;
+        }
+
+        .back-btn {
+            margin-top: 20px;
+            display: inline-block;
+            background: #444;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .back-btn:hover { background: #222; }
+
+        a {
+            color: #007bff;
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        a:hover { text-decoration: underline; }
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
     </style>
 </head>
 <body>
@@ -47,9 +144,16 @@
 
     <!-- FILTERS -->
     <div class="filter-section">
+<<<<<<< HEAD
         <form method="get" action="/admin/orders">
             <div class="filter-row">
                 <input type="text" name="q" placeholder="Search name/phone/order id" value="{{ query or '' }}" style="flex:1; min-width:180px;">
+=======
+        <form method="get">
+            <div class="filter-row">
+                <input type="text" name="q" placeholder="Search name/phone/order id"
+                       value="{{ query or '' }}">
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
 
                 <div>
                     <label>Start Date:</label><br>
@@ -66,19 +170,33 @@
                     <select name="courier">
                         <option value="">All Couriers</option>
                         {% for c in couriers %}
+<<<<<<< HEAD
                             <option value="{{ c }}" {% if courier_filter == c %}selected{% endif %}>{{ c }}</option>
+=======
+                            <option value="{{ c }}" {% if courier_filter == c %}selected{% endif %}>
+                                {{ c }}
+                            </option>
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
                         {% endfor %}
                     </select>
                 </div>
 
+<<<<<<< HEAD
                 <div style="display:flex; gap:8px; align-items:center;">
                   <button type="submit">Apply Filter</button>
                   <a href="/admin/orders"><button type="button" class="clear-btn">Clear</button></a>
                 </div>
+=======
+                <button type="submit">Apply Filter</button>
+                <a href="/admin/orders">
+                    <button type="button" class="clear-btn">Clear</button>
+                </a>
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
             </div>
         </form>
     </div>
 
+<<<<<<< HEAD
     <!-- ACTIONS (bulk) -->
     <div class="actions-row">
         <form id="bulkForm" method="post" action="/admin/orders/bulk_edit" style="display:inline;">
@@ -101,6 +219,12 @@
         <thead>
         <tr>
             <th style="width:42px"></th>
+=======
+    <!-- TABLE -->
+    {% if orders %}
+    <table>
+        <tr>
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
             <th>Name</th>
             <th>Order ID</th>
             <th>Phone</th>
@@ -109,6 +233,7 @@
             <th>Courier</th>
             <th>Track</th>
             <th>Date</th>
+<<<<<<< HEAD
             <th style="width:80px">Actions</th>
         </tr>
         </thead>
@@ -121,6 +246,14 @@
             </td>
             <td>{{ row.customer_name }}</td>
             <td>{{ row.order_id or '–' }}</td>
+=======
+        </tr>
+
+        {% for row in orders %}
+        <tr>
+            <td>{{ row.customer_name }}</td>
+            <td>{{ row.order_id }}</td>
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
             <td>{{ row.phone }}</td>
             <td>{{ row.pincode }}</td>
             <td>{{ row.tracking_number }}</td>
@@ -131,6 +264,7 @@
                 {% else %} - {% endif %}
             </td>
             <td>{{ row.updated_at }}</td>
+<<<<<<< HEAD
             <td>
                 <!-- Correct edit link pointing to route -->
                 <a href="/admin/order/{{ row.id }}/edit">Edit</a> |
@@ -141,6 +275,11 @@
         </tbody>
     </table>
     </form>
+=======
+        </tr>
+        {% endfor %}
+    </table>
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
     {% else %}
         <p>No orders found.</p>
     {% endif %}
@@ -148,6 +287,7 @@
     <a href="/admin" class="back-btn">← Back to Dashboard</a>
 </div>
 
+<<<<<<< HEAD
 <script>
   // select all checkboxes on page
   document.getElementById('selectAll').addEventListener('change', function() {
@@ -217,5 +357,7 @@
   }
 </script>
 
+=======
+>>>>>>> 016b26d6750c0d8606ad5b7e7a6fe302a54e72ad
 </body>
 </html>
